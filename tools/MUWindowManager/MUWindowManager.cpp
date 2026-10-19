@@ -180,7 +180,7 @@ void DiscoverClients()
         {
             client.placement.length = sizeof(WINDOWPLACEMENT);
             GetWindowPlacement(client.window, &client.placement);
-            ShowWindow(client.window, SW_HIDE);
+			ShowWindow(client.window, SW_MINIMIZE);
             client.hiddenByManager = true;
         }
 
@@ -201,7 +201,10 @@ void HideAllClients()
 
         client.placement.length = sizeof(WINDOWPLACEMENT);
         GetWindowPlacement(client.window, &client.placement);
-        ShowWindow(client.window, SW_HIDE);
+		// Minimize instead of merely making the HWND invisible. This gives an
+		// immediate, standard Windows transition while the game loop and the
+		// server-side Helper continue running normally.
+		ShowWindow(client.window, SW_MINIMIZE);
         client.hiddenByManager = true;
     }
 
@@ -220,10 +223,13 @@ void RestoreAllClients()
 
         client.placement.length = sizeof(WINDOWPLACEMENT);
         SetWindowPlacement(client.window, &client.placement);
-        const int showCommand = client.placement.showCmd == SW_HIDE
+		const int showCommand = (client.placement.showCmd == SW_HIDE ||
+			client.placement.showCmd == SW_SHOWMINIMIZED ||
+			client.placement.showCmd == SW_MINIMIZE)
             ? SW_SHOWNORMAL
             : static_cast<int>(client.placement.showCmd);
         ShowWindow(client.window, showCommand);
+		SetForegroundWindow(client.window);
         client.hiddenByManager = false;
     }
 
