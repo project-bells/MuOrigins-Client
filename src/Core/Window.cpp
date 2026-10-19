@@ -179,7 +179,7 @@ bool CWindow::Create(HINSTANCE hInst, WNDPROC wndProc)
 {
     m_hInst = hInst;
 
-    WNDCLASSA wc     = {};
+    WNDCLASSW wc     = {};
     wc.style         = 0x2B;            // CS_OWNDC|CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS
     wc.lpfnWndProc   = wndProc;
     wc.hInstance     = hInst;
@@ -187,17 +187,17 @@ bool CWindow::Create(HINSTANCE hInst, WNDPROC wndProc)
     wc.hIcon         = LoadIconA(hInst, MAKEINTRESOURCEA(IDI_MAIN_ICON));
     wc.hCursor       = LoadCursorA(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wc.lpszClassName = "Dialog";        // lo usa el FindWindowA de instancia única
-    RegisterClassA(&wc);
+    wc.lpszClassName = L"Dialog";
+    RegisterClassW(&wc);
 
     if (!m_WindowMode) {
         // Pantalla completa, como el original: el cambio de modo va ANTES de
         // crear la ventana (en IDA, EnumDisplaySettings precede a StartWindow).
         ApplyFullscreen();
-        m_hWnd = CreateWindowExA(
+        m_hWnd = CreateWindowExW(
             WS_EX_APPWINDOW,
-            "Dialog",
-            "Mu Online",
+            L"Dialog",
+            L"Mu Online",
             WS_POPUP | WS_VISIBLE,
             0, 0, m_Width, m_Height,
             NULL, NULL, hInst, NULL
@@ -225,10 +225,10 @@ bool CWindow::Create(HINSTANCE hInst, WNDPROC wndProc)
         if (x < 0) x = 0;
         if (y < 0) y = 0;
 
-        m_hWnd = CreateWindowExA(
+        m_hWnd = CreateWindowExW(
             WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
-            "Dialog",
-            "Mu Online",
+            L"Dialog",
+            L"Mu Online",
             style,
             x, y, w, h,
             NULL, NULL, hInst, NULL

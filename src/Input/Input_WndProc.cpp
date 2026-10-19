@@ -302,8 +302,15 @@ void Input_OnWindowMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         const bool guildDeleteCodeDialog =
             DAT_083a7c24 == 126 || DAT_083a7c24 == 152;
         if (DAT_00559c84 || GoldInputEnable || GuildInputEnable || guildDeleteCodeDialog) {
-            BYTE c = (BYTE)wParam;
-            if (GoldInputEnable && (c < '0' || c > '9')) break;
+            wchar_t unicode = (wchar_t)wParam;
+            char encoded[4] = {};
+            int encodedLength = 0;
+            if (unicode >= 0x20 && unicode != 0x7F) {
+                encodedLength = WideCharToMultiByte(874, 0, &unicode, 1,
+                                                    encoded, sizeof(encoded), nullptr, nullptr);
+            }
+            if (encodedLength <= 0) break;
+            if (GoldInputEnable && (encoded[0] < '0' || encoded[0] > '9')) break;
             // RANGO ACEPTADO — DESVIACIÓN DELIBERADA, hermana del charset de
             // CreateFontA (ver WinMain paso 15).
             // Acá había `c < 0x7F`, o sea ASCII puro: por eso no se podía
@@ -314,14 +321,15 @@ void Input_OnWindowMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
             // camino los destrozaría igual que HANGEUL_CHARSET destrozaba el
             // render.  Los aceptamos como carácter simple.
             // 0x7F es DEL: se sigue descartando.
-            if (c >= 0x20 && c != 0x7F) {
+            if ((unsigned char)encoded[0] >= 0x20 && (unsigned char)encoded[0] != 0x7F) {
                 // InputTextMax[8] @ 0x00559c94 — leído como int desde el array
                 // tipado (NO vía la referencia aliasada a float, que castea el valor).
                 int maxLen = _InputTextMaxArr[slot];
                 if (maxLen <= 0) maxLen = 10;  // login-default fallback
-                if (len < maxLen) {
-                    buf[len]   = (char)c;
-                    lens[slot] = (DWORD)(len + 1);
+                if (len + encodedLength <= maxLen) {
+                    memcpy(buf + len, encoded, encodedLength);
+                    lens[slot] = (DWORD)(len + encodedLength);
+                    buf[len + encodedLength] = 0;
                 }
             }
         }

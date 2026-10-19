@@ -17,19 +17,21 @@ void CFont::Create(DWORD windowWidth)
         // común puede ir en negrita (FontBold) y la grande mide el doble.
         m_Height = cfg.height;
         const DWORD pitch = DEFAULT_PITCH;
+        const int textCharset = (cfg.charset == DEFAULT_CHARSET) ? THAI_CHARSET : cfg.charset;
+        const char* textFace = (cfg.charset == DEFAULT_CHARSET) ? "Tahoma" : cfg.faceName;
         m_Fonts[FONT_NORMAL] = CreateFontA(m_Height, cfg.width, 0, 0,
                                            cfg.bold ? FW_BOLD : FW_NORMAL,
                                            cfg.italic, cfg.underline, cfg.strikeOut,
-                                           cfg.charset, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                           cfg.quality, pitch, cfg.faceName);
+                                           textCharset, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                           cfg.quality, pitch, textFace);
         m_Fonts[FONT_BOLD]   = CreateFontA(m_Height, cfg.width, 0, 0, FW_BOLD,
                                            cfg.italic, cfg.underline, cfg.strikeOut,
-                                           cfg.charset, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                           cfg.quality, pitch, cfg.faceName);
+                                           textCharset, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                           cfg.quality, pitch, textFace);
         m_Fonts[FONT_BIG]    = CreateFontA(m_Height * 2, cfg.width, 0, 0, FW_BOLD,
                                            cfg.italic, cfg.underline, cfg.strikeOut,
-                                           cfg.charset, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                           cfg.quality, pitch, cfg.faceName);
+                                           textCharset, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                           cfg.quality, pitch, textFace);
         return;
     }
 
@@ -46,12 +48,12 @@ void CFont::Create(DWORD windowWidth)
     // toma los bytes 0x81..0xFE como primer byte de un par DBCS y se come el
     // carácter siguiente ("da? o" en vez de "daño"). En el original sale de
     // g_dwCharSet según el idioma; para datos en 1252 corresponde DEFAULT_CHARSET.
-    const DWORD charSet = DEFAULT_CHARSET;
+    const DWORD charSet = THAI_CHARSET;
 
-    m_Fonts[FONT_NORMAL] = CreateFontA(fontSize, 0, 0, 0, 400, 0, 0, 0, charSet, 0, 0, 0, 0, "Arial");
-    m_Fonts[FONT_BOLD]   = CreateFontA(fontSize, 0, 0, 0, 700, 0, 0, 0, charSet, 0, 0, 0, 0, "Arial");
+    m_Fonts[FONT_NORMAL] = CreateFontA(fontSize, 0, 0, 0, 400, 0, 0, 0, charSet, 0, 0, 0, 0, "Tahoma");
+    m_Fonts[FONT_BOLD]   = CreateFontA(fontSize, 0, 0, 0, 700, 0, 0, 0, charSet, 0, 0, 0, 0, "Tahoma");
     // IDA WinMain 0x41F151: el doble de la base (m_Height - 1), bold.
-    m_Fonts[FONT_BIG]    = CreateFontA(2 * (fontSize - 1), 0, 0, 0, 700, 0, 0, 0, charSet, 0, 0, 0, 0, "Arial");
+    m_Fonts[FONT_BIG]    = CreateFontA(2 * (fontSize - 1), 0, 0, 0, 700, 0, 0, 0, charSet, 0, 0, 0, 0, "Tahoma");
 }
 
 void CFont::CreateTextSurface(HDC hdc, LONG width, LONG height)
