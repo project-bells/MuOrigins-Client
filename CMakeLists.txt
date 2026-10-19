@@ -109,6 +109,7 @@ set(MU_SOURCES
     src/Net/ServerCharacterStats.cpp
     src/Item/ChaosMixRates.cpp
     src/UI/HealthBar.cpp
+	src/UI/HelperWindow.cpp
     src/Net/Recv/Recv_Account.cpp
     src/Net/Recv/Recv_Character.cpp
     src/Net/Recv/Recv_Chat.cpp
@@ -406,6 +407,7 @@ set(MU_HEADERS
     src/Net/ServerCharacterStats.h
     src/Item/ChaosMixRates.h
     src/UI/HealthBar.h
+	src/UI/HelperWindow.h
     src/Net/Recv/NetRecv.h
     src/Combat/Combat.h
     src/Combat/Skills.h

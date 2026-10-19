@@ -82,7 +82,13 @@ Status: **protocol and server core implemented; client UI and live integration t
   validated status state; disconnect/character reset clears that state.
 - Win32 Release built successfully with zero warnings on 2026-10-19.
 
-Pending: in-game settings panel, movement/return behavior (Phase 4), Linux
+The first in-game settings panel is implemented in `src/UI/HelperWindow.*`.
+Press `H` while in the world to open it. It exposes server status, attack,
+hunting range, HP/MP thresholds, primary/secondary skill IDs, secondary-skill
+cadence, auto buff, Apply, Start, and Stop. Its hit area blocks world movement,
+and the hotkey is disabled while chat input is active.
+
+Pending: named skill selection, movement/return behavior (Phase 4), Linux
 Docker compilation, and live combat/potion/buff verification. Offline requests
 deliberately return `NOT_SUPPORTED` until Phase 5 instead of disconnecting or
 pretending that offline control is active.

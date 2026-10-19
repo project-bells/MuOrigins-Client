@@ -206,6 +206,7 @@
 //   TestFrustrum2D  → Frustum_IsVisible(x, y, z)   — world→screen cull check
 
 #include "stdafx.h"
+#include "UI/HelperWindow.h"
 #include "Item/ContentCatalog.h"
 #include "Config/UserSettings.h"
 #include "UI/HealthBar.h"
@@ -361,6 +362,7 @@ void Render_GameFrame(void)
     Render_MapLoadText();           // sub_4BF2D0
     Render_FloatingText();          // RenderBooleans @ 0x4BD090 (was misnamed)
     Render_QuickButtons();          // sub_4F5820
+    HelperWindow::Render();
 
     // Vtable dispatch — chat-listbox scroll renderer (slot 4 = +0x10).
     // The widget object is constructed in WinMain via ChatListBox_Construct;

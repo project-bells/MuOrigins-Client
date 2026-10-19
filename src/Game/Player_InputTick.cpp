@@ -4,6 +4,7 @@
 #include "UI/MiniMap.h"
 #include "UI/EventTimer.h"
 #include "UI/MoveList.h"
+#include "UI/HelperWindow.h"
 #include "globals.h"
 #include "functions.h"
 #include "Net/Net.h"
@@ -73,6 +74,8 @@ static void MouseOnWindow_Update(void)
 
     int mx = (int)DAT_083a427c;
     int my = (int)DAT_083a4278;
+
+    if (HelperWindow::IsMouseOver()) { g_MouseOnWindow = 1; return; }
 
     if (g_ChatLB_MouseOnWindow) { g_MouseOnWindow = 1; return; }
 
@@ -592,6 +595,7 @@ void __cdecl Player_ProcessInput(void)
     // El procesamiento de hotkeys de UI va PRIMERO, para que los toggles funcionen
     // incluso cuando los gates de abajo saldrían temprano (p.ej. durante un cooldown).
     HUD_HotkeyTick();
+    HelperWindow::UpdateInput();
     // Poblar el flag MouseOnWindow (per IDA) ANTES de la lógica de GroundClick,
     // así clickear adentro de un panel no hace caminar al jugador.
     MouseOnWindow_Update();
