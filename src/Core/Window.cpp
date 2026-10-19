@@ -246,7 +246,10 @@ bool CWindow::Create(HINSTANCE hInst, WNDPROC wndProc)
                                      GetSystemMetrics(SM_CYSMICON),
                                      LR_DEFAULTCOLOR);
     if (hSmall) SendMessageA(m_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
-    StartWindowManager();
+    // Own F12 in the game window itself. WM_HOTKEY is delivered even while the
+    // window is minimized, so the same key restores it without relying on a
+    // companion process or foreground keyboard focus.
+    RegisterHotKey(m_hWnd, 0x4D55, MOD_NOREPEAT, VK_F12);
     return true;
 }
 

@@ -95,9 +95,12 @@ static void SetPlayerBow97k(BYTE* entity)
 // Skills_PacketHandler @ 0042BCA0 LABEL_107/LABEL_98.  A broadcast only
 // animates its remote caster; it does not invoke a target-selection helper and
 // it never replays the local hero's cast animation.
-static void AnimateRemoteSkillCaster97k(BYTE* caster)
+static void AnimateSkillCaster97k(BYTE* caster, bool helperCast)
 {
-    if (!caster || caster == (BYTE*)DAT_07abf5d8)
+    // Normal right-click casts are already animated by the local input path.
+    // Helper casts carry bit 15 in the caster key so the server broadcast can
+    // animate the local hero without replaying ordinary player input.
+    if (!caster || (caster == (BYTE*)DAT_07abf5d8 && !helperCast))
         return;
     if (*(WORD*)(caster + 2) == 390)
         SetPlayerMagic((int)(intptr_t)caster);
@@ -136,6 +139,7 @@ void PacketHandler_0x19(BYTE* pkt)
     int target_id   = target_raw & 0x7FFF;
     // Bit 15 del target = flag de EXITO del skill (ver la nota de +0x301 arriba).
     int skill_ok    = (target_raw >> 15) & 1;
+    const bool helperCast = ((caster_raw >> 15) & 1) != 0;
 
     int caster_idx  = Entity_FindById(caster_id);
     int target_idx  = Entity_FindById(target_id);
@@ -205,7 +209,7 @@ void PacketHandler_0x19(BYTE* pkt)
         // hace `SetPlayerMagic(sc)` para las entidades que no son el heroe; la llama
         // `SetPlayerBow` en los cases 0x18/0x34/0x33. (Además espera un PUNTERO de
         // entidad, no el índice.)
-        AnimateRemoteSkillCaster97k(caster);
+        AnimateSkillCaster97k(caster, helperCast);
         goto common_tail;
     }
 
@@ -221,7 +225,7 @@ void PacketHandler_0x19(BYTE* pkt)
                 SetPlayerStop((int)(intptr_t)target);
             }
         }
-        AnimateRemoteSkillCaster97k(caster);
+        AnimateSkillCaster97k(caster, helperCast);
         goto common_tail;
     }
 
@@ -251,7 +255,7 @@ void PacketHandler_0x19(BYTE* pkt)
     {
         // Case 0x10 enters LABEL_98 directly: remote magic animation, with
         // no magic-hit sound.  It is deliberately separate from 0x1A..0x24.
-        AnimateRemoteSkillCaster97k(caster);
+        AnimateSkillCaster97k(caster, helperCast);
         goto common_tail;
     }
 
@@ -275,7 +279,7 @@ void PacketHandler_0x19(BYTE* pkt)
         if (caster != (BYTE*)DAT_07abf5d8)
         {
             // FUN_00413900(0x51, caster_idx) — UI event 0x51 = magic hit
-            AnimateRemoteSkillCaster97k(caster);
+            AnimateSkillCaster97k(caster, helperCast);
         }
         goto common_tail;
     }
