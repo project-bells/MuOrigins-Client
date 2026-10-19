@@ -45,9 +45,9 @@ struct StatusPacket {
 };
 #pragma pack(pop)
 
-static_assert(sizeof(ConfigPacket) == 12, "Helper config wire layout");
+static_assert(sizeof(ConfigPacket) == 14, "Helper config wire layout");
 static_assert(sizeof(CommandPacket) == 5, "Helper command wire layout");
-static_assert(sizeof(StatusPacket) == 18, "Helper status wire layout");
+static_assert(sizeof(StatusPacket) == 20, "Helper status wire layout");
 
 Status g_Status;
 
@@ -64,6 +64,8 @@ bool IsValid(const Settings& settings)
            settings.hpThreshold <= 100 && settings.mpThreshold <= 100 &&
            settings.primarySkill < 57 && settings.secondarySkill < 57 &&
            settings.secondaryEvery >= 1 && settings.secondaryEvery <= 20 &&
+           settings.lootRange >= 1 && settings.lootRange <= 5 &&
+           (settings.lootFlags & ~(LootZen | LootJewels | LootExcellent)) == 0 &&
            (settings.flags & ~allowedFlags) == 0;
 }
 

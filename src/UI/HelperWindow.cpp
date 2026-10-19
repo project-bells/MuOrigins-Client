@@ -8,7 +8,7 @@ namespace {
 constexpr int kX = 12;
 constexpr int kY = 58;
 constexpr int kWidth = 230;
-constexpr int kHeight = 318;
+constexpr int kHeight = 414;
 constexpr int kRowHeight = 24;
 
 bool g_Open = false;
@@ -96,6 +96,15 @@ void ToggleFlag(int row, std::uint8_t flag)
     }
 }
 
+void ToggleLootFlag(int row, std::uint8_t flag)
+{
+    const int y = kY + 42 + row * kRowHeight;
+    if (Clicked(kX + 8, y, kWidth - 16, 20)) {
+        g_Settings.lootFlags ^= flag;
+        ConsumeClick();
+    }
+}
+
 } // namespace
 
 bool IsMouseOver()
@@ -127,8 +136,12 @@ void UpdateInput()
     ChangeValue(5, g_Settings.secondarySkill, 0, 56, 1);
     ChangeValue(6, g_Settings.secondaryEvery, 1, 20, 1);
     ToggleFlag(7, HelperProtocol::AutoBuff);
+    ToggleLootFlag(8, HelperProtocol::LootZen);
+    ToggleLootFlag(9, HelperProtocol::LootJewels);
+    ToggleLootFlag(10, HelperProtocol::LootExcellent);
+    ChangeValue(11, g_Settings.lootRange, 1, 5, 1);
 
-    const int buttonsY = kY + 42 + 8 * kRowHeight + 6;
+    const int buttonsY = kY + 42 + 12 * kRowHeight + 6;
     if (Clicked(kX + 8, buttonsY, 66, 20)) {
         HelperProtocol::SendConfiguration(g_Settings);
         ConsumeClick();
@@ -170,8 +183,12 @@ void Render()
     DrawValueRow(5, "Secondary Skill ID", g_Settings.secondarySkill);
     DrawValueRow(6, "Secondary Every", g_Settings.secondaryEvery);
     DrawToggleRow(7, "Auto Buff", (g_Settings.flags & HelperProtocol::AutoBuff) != 0);
+    DrawToggleRow(8, "Loot Zen", (g_Settings.lootFlags & HelperProtocol::LootZen) != 0);
+    DrawToggleRow(9, "Loot Jewels", (g_Settings.lootFlags & HelperProtocol::LootJewels) != 0);
+    DrawToggleRow(10, "Loot Excellent", (g_Settings.lootFlags & HelperProtocol::LootExcellent) != 0);
+    DrawValueRow(11, "Loot Range", g_Settings.lootRange);
 
-    const int buttonsY = kY + 42 + 8 * kRowHeight + 6;
+    const int buttonsY = kY + 42 + 12 * kRowHeight + 6;
     DrawButton(kX + 8, buttonsY, 66, "APPLY");
     DrawButton(kX + 82, buttonsY, 66, "START", status.active);
     DrawButton(kX + 156, buttonsY, 66, "STOP");

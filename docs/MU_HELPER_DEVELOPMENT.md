@@ -69,7 +69,7 @@ Status: **protocol and server core implemented; client UI and live integration t
 
 - The inspected unused extension opcode is `0xFA`. Subcodes `00` through `05`
   cover configuration, start, stop, status, offline request, and synchronization.
-- Both sides use protocol version 1, exact packet-size checks, bounded fields,
+- Both sides use protocol version 2, exact packet-size checks, bounded fields,
   and a 250 ms server command rate limit. The client never submits damage,
   rewards, inventory results, or character state.
 - `Source/MuServer/GameServer/HelperManager.*` runs from the existing 100 ms
@@ -95,10 +95,13 @@ pretending that offline control is active.
 
 ## Phase 4 — Advanced automation
 
-Status: **pending**.
+Status: **Auto Loot core implemented; navigation, party, and persistence pending**.
 
-Implement owner-validated item pickup and filters, hunting-origin return,
-navigation/stuck recovery, party automation, and per-character persistence.
+Protocol version 2 adds independent Zen, jewel, and Excellent-item filters plus
+a pickup range of 1-5 tiles. The GameServer only chooses a nearby viewport item;
+the actual pickup is passed to the original `CGItemGetRecv`, preserving item
+ownership, quest rules, inventory capacity, Zen limits, and normal client
+inventory packets. The Helper never creates or awards an item directly.
 
 ## Phase 5 — Offline hunting
 

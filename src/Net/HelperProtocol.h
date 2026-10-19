@@ -5,13 +5,19 @@
 namespace HelperProtocol {
 
 constexpr std::uint8_t kHead = 0xFA;
-constexpr std::uint8_t kVersion = 1;
+constexpr std::uint8_t kVersion = 2;
 
 enum Flags : std::uint8_t {
     AutoAttack = 0x01,
     AutoHp = 0x02,
     AutoMp = 0x04,
     AutoBuff = 0x08,
+};
+
+enum LootFlags : std::uint8_t {
+    LootZen = 0x01,
+    LootJewels = 0x02,
+    LootExcellent = 0x04,
 };
 
 #pragma pack(push, 1)
@@ -24,6 +30,8 @@ struct Settings {
     std::uint8_t primarySkill = 0;
     std::uint8_t secondarySkill = 0;
     std::uint8_t secondaryEvery = 5;
+    std::uint8_t lootFlags = LootZen | LootJewels | LootExcellent;
+    std::uint8_t lootRange = 3;
 };
 
 struct Status {
