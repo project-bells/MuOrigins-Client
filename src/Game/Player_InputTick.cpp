@@ -475,21 +475,10 @@ static void HUD_HotkeyTick(void)
     int kI = PressKey(0x49); // 'I'  Inventory
     int kG = PressKey(0x47); // 'G'  Guild
     int kP = PressKey(0x50); // 'P'  Party
-    int kD = PressKey(0x44); // 'D'  Command input
+    int kD = PressKey(0x44); // 'D'  Command window
 
     if (kD) {
-        // Restore the classic D-key command entry. Commands are handled by the
-        // server (/trade, /party, /guild, /post, /reset, stat commands).
-        memset((void*)DAT_07db8710, 0, 0x100);
-        ((char*)DAT_07db8710)[0] = '/';
-        ((DWORD*)DAT_07d780a8)[0] = 1;
-        _InputTextMaxArr[0] = 42;
-        _InputTextMaxArr[1] = 10;
-        InputTextHide[0] = 0;
-        InputNumber = 2;
-        DAT_07e11d78 = 0;
-        DAT_00559c84 = 1;
-        PlayBuffer(0x19, 0, 0);
+        CommandWindow::Toggle();
         return;
     }
     // DESVIACION (DLL Controller.cpp): H abre los horarios recibidos del server.
@@ -614,6 +603,7 @@ void __cdecl Player_ProcessInput(void)
     // incluso cuando los gates de abajo saldrían temprano (p.ej. durante un cooldown).
     HUD_HotkeyTick();
     HelperWindow::UpdateInput();
+    CommandWindow::UpdateInput();
 
     // Poll F12 through the same input path as the working Helper hotkeys.
     // GetAsyncKeyState/PressKey remains available while the game is minimized,

@@ -3,6 +3,8 @@
 #include "UI/UIState.h"
 #include "Net/HelperProtocol.h"
 
+extern "C" void Chat_SendChatLine(const char* text);
+
 namespace HelperWindow {
 namespace {
 
@@ -236,6 +238,8 @@ bool IsMouseOver()
     return g_Open && Inside(kX, kY, kWidth, kHeight);
 }
 
+void Close() { g_Open = false; }
+
 void UpdateInput()
 {
     if (SceneFlag == 5 && DAT_00559c84 == 0 && PressKey(VK_F5)) {
@@ -351,3 +355,124 @@ void Render()
 }
 
 } // namespace HelperWindow
+
+namespace CommandWindow {
+namespace {
+constexpr int X = 450;
+constexpr int Y = 28;
+constexpr int W = 184;
+constexpr int H = 394;
+constexpr int ButtonX = X + 16;
+constexpr int ButtonW = W - 32;
+constexpr int ButtonH = 26;
+constexpr int ButtonGap = 4;
+bool open = false;
+char* selectedPlayer = nullptr;
+bool In(int x, int y, int w, int h);
+
+void Box(int x, int y, int w, int h, float r, float g, float b, float a) {
+    EnableAlphaTest(true); glColor4f(r, g, b, a);
+    GL_DrawRect((float)x, (float)y, (float)w, (float)h);
+    GL_ResetState(); glColor4f(1, 1, 1, 1);
+}
+void Text(int x, int y, int w, const char* value, int align = 0) {
+    RenderText(x, y, const_cast<char*>(value), w, align, nullptr);
+}
+void Button(int x, int y, int w, const char* value) {
+    bool hover = In(x, y, w, 20);
+    Box(x, y, w, 20, hover ? 0.30f : 0.13f, hover ? 0.27f : 0.13f,
+        hover ? 0.18f : 0.12f, 0.96f);
+    Box(x, y, w, 1, 0.65f, 0.52f, 0.28f, 1.0f);
+    Text(x, y + 4, w, value, 1);
+}
+
+const char* const labels[] = {
+    "Trade", "Buy", "Party", "Whisper", "Guild", "Alliance",
+    "Hostility guild", "Suspend hostilities", "Add Friend", "Follow", "Duel"
+};
+const char* const commands[] = {
+    "/trade", "/buy", "/party", nullptr, "/guild", "/alliance",
+    "/guildwar", "/guildwarend", "/friend", "/follow", "/duel"
+};
+
+bool In(int x, int y, int w, int h) {
+    return MouseX >= x && MouseX < x + w && MouseY >= y && MouseY < y + h;
+}
+void Consume() {
+    MouseLButtonPush = 0; DAT_083a413c = 0; DAT_07e11d28 = 0;
+    PlayBuffer(0x19, 0, 0);
+}
+char* SelectedPlayer() {
+    if (SelectedCharacter < 0 || SelectedCharacter >= 400 || !DAT_07abf5d0) return nullptr;
+    char* entity = (char*)(uintptr_t)DAT_07abf5d0 + SelectedCharacter * 0x394;
+    if (!entity[0] || entity == DAT_07abf5d8 || entity[132] != 1) return nullptr;
+    return entity;
+}
+void OpenWhisper(char* player) {
+    memset((void*)DAT_07db8710, 0, 0x200);
+    lstrcpynA((char*)DAT_07db8810, player + 449, 11);
+    ((DWORD*)DAT_07d780a8)[0] = 0;
+    ((DWORD*)DAT_07d780a8)[1] = (DWORD)strlen((char*)DAT_07db8810);
+    _InputTextMaxArr[0] = 42; _InputTextMaxArr[1] = 10;
+    InputNumber = 2; DAT_07e11d78 = 0; DAT_00559c84 = 1;
+}
+void Execute(int index) {
+    char* player = selectedPlayer;
+    if (!player) {
+        UIChatLogWindow_AddText(nullptr, "Select a player first.", 1);
+        return;
+    }
+    if (index == 3) { OpenWhisper(player); open = false; return; }
+    char line[80] = {};
+    sprintf_s(line, "%s %s", commands[index], player + 449);
+    Chat_SendChatLine(line);
+    open = false;
+}
+}
+
+void Toggle() {
+    if (SceneFlag != 5) return;
+    if (!open) selectedPlayer = SelectedPlayer();
+    open = !open;
+    HelperWindow::Close();
+    PlayBuffer(0x19, 0, 0);
+}
+bool IsMouseOver() { return open && In(X, Y, W, H); }
+void UpdateInput() {
+    if (SceneFlag != 5) { open = false; return; }
+    if (!open) return;
+    UIState::CaptureMouseForUI();
+    if (UIState::HasRightPanel() || UIState::HasModalDialog() || UIState::HasTextInput()) {
+        open = false; return;
+    }
+    if (MouseLButton && MouseLButtonPush) {
+        if (In(X + W - 28, Y + 7, 20, 20) || In(X + 8, Y + H - 31, 28, 23)) {
+            open = false; Consume(); return;
+        }
+        for (int i = 0; i < 11; ++i) {
+            int by = Y + 40 + i * (ButtonH + ButtonGap);
+            if (In(ButtonX, by, ButtonW, ButtonH)) { Execute(i); Consume(); return; }
+        }
+    }
+}
+void Render() {
+    if (!open || SceneFlag != 5) return;
+    DWORD oldText = m_dwTextColor, oldBack = m_dwBackColor;
+    m_dwTextColor = 0xFFFFFFFFu; m_dwBackColor = 0;
+    Box(X, Y, W, H, 0.025f, 0.025f, 0.03f, 0.96f);
+    Box(X, Y, W, 2, 0.75f, 0.56f, 0.18f, 1.0f);
+    Box(X + 4, Y + 31, W - 8, 1, 0.55f, 0.42f, 0.18f, 0.9f);
+    Text(X + 8, Y + 11, W - 16, "COMMAND WINDOW", 1);
+    Button(X + W - 28, Y + 7, 20, "X");
+    for (int i = 0; i < 11; ++i) {
+        int by = Y + 40 + i * (ButtonH + ButtonGap);
+        bool hover = In(ButtonX, by, ButtonW, ButtonH);
+        Box(ButtonX, by, ButtonW, ButtonH, hover ? 0.26f : 0.12f,
+                hover ? 0.24f : 0.12f, hover ? 0.18f : 0.12f, 0.96f);
+        Box(ButtonX, by, ButtonW, 1, 0.58f, 0.48f, 0.30f, 1.0f);
+        Text(ButtonX, by + 7, ButtonW, labels[i], 1);
+    }
+    Button(X + 8, Y + H - 31, 28, "X");
+    m_dwTextColor = oldText; m_dwBackColor = oldBack;
+}
+}

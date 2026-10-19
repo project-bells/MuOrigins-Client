@@ -363,6 +363,7 @@ void Render_GameFrame(void)
     Render_FloatingText();          // RenderBooleans @ 0x4BD090 (was misnamed)
     Render_QuickButtons();          // sub_4F5820
     HelperWindow::Render();
+    CommandWindow::Render();
 
     // Vtable dispatch — chat-listbox scroll renderer (slot 4 = +0x10).
     // The widget object is constructed in WinMain via ChatListBox_Construct;
