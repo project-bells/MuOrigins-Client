@@ -165,6 +165,7 @@ set(MU_SOURCES
     src/Net/PacketFrame.cpp
     src/Net/Net_Events.cpp
     src/Net/HWID.cpp
+	src/Net/HelperProtocol.cpp
     src/Entity/Entity_Init.cpp
     src/Entity/Entity_MoveClient.cpp
     src/Entity/Entity_Spawn.cpp
@@ -419,6 +420,7 @@ set(MU_HEADERS
     src/Monster/Monster.h
     src/Net/Net.h
     src/Net/HWID.h
+	src/Net/HelperProtocol.h
     src/Net/PacketFrame.h
     src/Net/SecondPassword.h
     src/Party/Party.h

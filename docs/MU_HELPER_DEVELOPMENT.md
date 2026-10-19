@@ -65,11 +65,27 @@ exit restore, and hotkey-conflict fallback.
 
 ## Phase 3 — Core MU Helper
 
-Status: **pending**.
+Status: **protocol and server core implemented; client UI and live integration tests pending**.
 
-Implement versioned settings/start/stop/status packets, a server-authoritative
-Helper scheduler, combat/skill/potion/buff validation through existing APIs,
-and the first in-game client settings panel.
+- The inspected unused extension opcode is `0xFA`. Subcodes `00` through `05`
+  cover configuration, start, stop, status, offline request, and synchronization.
+- Both sides use protocol version 1, exact packet-size checks, bounded fields,
+  and a 250 ms server command rate limit. The client never submits damage,
+  rewards, inventory results, or character state.
+- `Source/MuServer/GameServer/HelperManager.*` runs from the existing 100 ms
+  monster timer and keeps per-object runtime state outside `OBJECTSTRUCT`.
+- The server selects the nearest valid viewport monster and reuses the existing
+  attack, skill-delay, mana/BP, potion, effect, inventory, and packet APIs.
+- Implemented core actions: start/stop/status, primary/secondary skill cadence,
+  basic attacks, HP/MP potions, and the four supported self buffs.
+- `src/Net/HelperProtocol.*` provides the matching Win32 client transport and
+  validated status state; disconnect/character reset clears that state.
+- Win32 Release built successfully with zero warnings on 2026-10-19.
+
+Pending: in-game settings panel, movement/return behavior (Phase 4), Linux
+Docker compilation, and live combat/potion/buff verification. Offline requests
+deliberately return `NOT_SUPPORTED` until Phase 5 instead of disconnecting or
+pretending that offline control is active.
 
 ## Phase 4 — Advanced automation
 

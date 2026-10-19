@@ -642,6 +642,7 @@
 
 #include "stdafx.h"
 #include "Net/Recv/NetRecv.h"
+#include "Net/HelperProtocol.h"
 
 void NetLog(const char* fmt, ...)
 {
@@ -789,6 +790,7 @@ void Net_ProcessPacket(void)
         EquipWipe_Tick(HeadCode, sub);   // diagnostico del wipe de equipo
 
         switch (HeadCode) {
+			case 0xFA: HelperProtocol::Receive(Msg, Size, hdr, sub); break;
             case 0xF1: NetRecv_F1(Msg, Size, hdr, sub, bEncrypted); break;
             case 0xF3: NetRecv_F3(Msg, Size, hdr, sub, bEncrypted); break;
             case 0xF4: NetRecv_F4(Msg, Size, hdr, sub, bEncrypted); break;

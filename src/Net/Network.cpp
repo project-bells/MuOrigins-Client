@@ -9,6 +9,7 @@
 #include "Net/Net.h"
 #include "Net/MuEmu.h"
 #include "Net/PacketFrame.h"
+#include "Net/HelperProtocol.h"
 #include "Net/ServerCharacterStats.h"
 #include "UI/HealthBar.h"
 #include "UI/MoveList.h"
@@ -24,6 +25,7 @@ CNetwork gNetwork;
 
 void CNetwork::ResetCharacterData()
 {
+	HelperProtocol::Reset();
     gServerCharacterStats.Reset();
     gHeroVitals.Reset();
     gHealthBar.Clear();
