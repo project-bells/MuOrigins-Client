@@ -98,6 +98,7 @@ set(MU_SOURCES
     src/UI/UIState.cpp
     src/Local/ClientText.cpp
     src/Core/Window.cpp
+    src/Core/MultiClientPolicy.cpp
     src/Core/Font.cpp
     src/Sound/SoundManager.cpp
     src/Game/MapManager.cpp
@@ -388,6 +389,7 @@ set(MU_HEADERS
     src/Item/Item_ServerValue.h
     src/UI/GoldenArcher.h
     src/Core/Window.h
+    src/Core/MultiClientPolicy.h
     src/Core/Font.h
     src/UI/EventTimer.h
     src/UI/MiniMap.h

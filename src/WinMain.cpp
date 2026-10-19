@@ -27,6 +27,7 @@
 //   buffer de envío @ 0x055ca16c  (máx 0x2001, cola de WSAEWOULDBLOCK)
 
 #include "stdafx.h"
+#include "Core/MultiClientPolicy.h"
 #include "Item/ItemDefines.h"
 #include "resource.h"
 #include "Debug/MiniDump.h"
@@ -520,6 +521,13 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
                 SetCurrentDirectoryA(exePath);
             }
         }
+    }
+
+    // The original single-instance FindWindow check was intentionally removed.
+    // Reserve one of four per-installation slots instead. Named slots make
+    // simultaneous launches atomic and are automatically freed after a crash.
+    if (!MultiClientPolicy_AcquireSlot()) {
+        return 0;
     }
     _set_invalid_parameter_handler(SilentInvalidParameterHandler);
     // SEM_FAILCRITICALERRORS: sin esto Windows puede interponer su propio
