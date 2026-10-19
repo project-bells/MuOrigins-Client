@@ -1,21 +1,24 @@
 #include "stdafx.h"
 #include "UI/HelperWindow.h"
+#include "UI/UIState.h"
 #include "Net/HelperProtocol.h"
 
 namespace HelperWindow {
 namespace {
 
-constexpr int kWidth = 198;
-constexpr int kHeight = 362;
+constexpr int kWidth = 184;
+constexpr int kHeight = 326;
 constexpr int kX = 640 - kWidth - 12;
 constexpr int kY = 62;
-constexpr int kRowHeight = 20;
+constexpr int kRowHeight = 18;
 
 bool g_Open = false;
 HelperProtocol::Settings g_Settings;
 bool g_StartPending = false;
 DWORD g_StartRequestedAt = 0;
 bool g_InitialSkillSelected = false;
+bool g_SettingsDirty = false;
+DWORD g_SettingsChangedAt = 0;
 
 bool IsLearnedSkill(std::uint8_t skill)
 {
@@ -93,10 +96,18 @@ void ApplyAndStart()
 {
     NormalizeSkills();
     if (!HelperProtocol::SendConfiguration(g_Settings)) return;
+    g_SettingsDirty = false;
     // The server rate-limits Helper commands. Sending Start in the same frame
     // as Config makes the second packet fail, so finish the sequence later.
     g_StartPending = true;
     g_StartRequestedAt = GetTickCount();
+}
+
+void SettingsChanged()
+{
+    NormalizeSkills();
+    g_SettingsDirty = true;
+    g_SettingsChangedAt = GetTickCount();
 }
 
 bool Inside(int x, int y, int width, int height)
@@ -135,8 +146,8 @@ void DrawTextLine(int x, int y, int width, const char* text, int align = 0)
 
 void DrawButton(int x, int y, int width, const char* text, bool active = false)
 {
-    const bool hover = Inside(x, y, width, 20);
-    DrawBox(x, y, width, 20, active ? 0.35f : 0.16f, active ? 0.55f : 0.18f,
+    const bool hover = Inside(x, y, width, 18);
+    DrawBox(x, y, width, 18, active ? 0.35f : 0.16f, active ? 0.55f : 0.18f,
             active ? 0.18f : 0.12f, hover ? 0.95f : 0.82f);
     DrawBox(x, y, width, 1, 0.78f, 0.58f, 0.20f, 1.0f);
     DrawTextLine(x, y + 4, width, text, 1);
@@ -147,9 +158,9 @@ void DrawValueRow(int row, const char* label, int value)
     const int y = kY + 42 + row * kRowHeight;
     char text[80];
     sprintf_s(text, "%s: %d", label, value);
-    DrawTextLine(kX + 8, y + 3, 116, text);
-    DrawButton(kX + 132, y, 24, "-");
-    DrawButton(kX + 164, y, 24, "+");
+    DrawTextLine(kX + 7, y + 3, 111, text);
+    DrawButton(kX + 124, y, 22, "-");
+    DrawButton(kX + 154, y, 22, "+");
 }
 
 void DrawSkillRow(int row, const char* label, std::uint8_t skill)
@@ -157,9 +168,9 @@ void DrawSkillRow(int row, const char* label, std::uint8_t skill)
     const int y = kY + 42 + row * kRowHeight;
     char text[96];
     sprintf_s(text, "%s: %s (%u)", label, SkillName(skill), (unsigned int)skill);
-    DrawTextLine(kX + 8, y + 3, 116, text);
-    DrawButton(kX + 132, y, 24, "<");
-    DrawButton(kX + 164, y, 24, ">");
+    DrawTextLine(kX + 7, y + 3, 111, text);
+    DrawButton(kX + 124, y, 22, "<");
+    DrawButton(kX + 154, y, 22, ">");
 }
 
 void DrawToggleRow(int row, const char* label, bool value)
@@ -167,17 +178,19 @@ void DrawToggleRow(int row, const char* label, bool value)
     const int y = kY + 42 + row * kRowHeight;
     char text[80];
     sprintf_s(text, "%s: %s", label, value ? "ON" : "OFF");
-    DrawButton(kX + 8, y, kWidth - 16, text, value);
+    DrawButton(kX + 7, y, kWidth - 14, text, value);
 }
 
 void ChangeValue(int row, std::uint8_t& value, int minimum, int maximum, int step)
 {
     const int y = kY + 42 + row * kRowHeight;
-    if (Clicked(kX + 132, y, 24, 18)) {
+    if (Clicked(kX + 124, y, 22, 18)) {
         value = (std::uint8_t)((value - minimum < step) ? maximum : value - step);
+        SettingsChanged();
         ConsumeClick();
-    } else if (Clicked(kX + 164, y, 24, 18)) {
+    } else if (Clicked(kX + 154, y, 22, 18)) {
         value = (std::uint8_t)((maximum - value < step) ? minimum : value + step);
+        SettingsChanged();
         ConsumeClick();
     }
 }
@@ -185,11 +198,13 @@ void ChangeValue(int row, std::uint8_t& value, int minimum, int maximum, int ste
 void ChangeSkill(int row, std::uint8_t& skill)
 {
     const int y = kY + 42 + row * kRowHeight;
-    if (Clicked(kX + 132, y, 24, 18)) {
+    if (Clicked(kX + 124, y, 22, 18)) {
         skill = CycleLearnedSkill(skill, -1);
+        SettingsChanged();
         ConsumeClick();
-    } else if (Clicked(kX + 164, y, 24, 18)) {
+    } else if (Clicked(kX + 154, y, 22, 18)) {
         skill = CycleLearnedSkill(skill, 1);
+        SettingsChanged();
         ConsumeClick();
     }
 }
@@ -197,8 +212,9 @@ void ChangeSkill(int row, std::uint8_t& skill)
 void ToggleFlag(int row, std::uint8_t flag)
 {
     const int y = kY + 42 + row * kRowHeight;
-    if (Clicked(kX + 8, y, kWidth - 16, 20)) {
+    if (Clicked(kX + 7, y, kWidth - 14, 18)) {
         g_Settings.flags ^= flag;
+        SettingsChanged();
         ConsumeClick();
     }
 }
@@ -206,8 +222,9 @@ void ToggleFlag(int row, std::uint8_t flag)
 void ToggleLootFlag(int row, std::uint8_t flag)
 {
     const int y = kY + 42 + row * kRowHeight;
-    if (Clicked(kX + 8, y, kWidth - 16, 20)) {
+    if (Clicked(kX + 7, y, kWidth - 14, 18)) {
         g_Settings.lootFlags ^= flag;
+        SettingsChanged();
         ConsumeClick();
     }
 }
@@ -237,6 +254,14 @@ void UpdateInput()
         return;
     }
 
+    // Behave like the original in-game side panels: opening inventory,
+    // character, shop, trade, modal or text input immediately hides Helper.
+    // Running is intentionally not stopped, including while F12 hides the game.
+    if (g_Open && (UIState::HasRightPanel() || UIState::HasModalDialog() ||
+                   UIState::HasTextInput() || UIState::IsItemMovePending())) {
+        g_Open = false;
+    }
+
     if (DAT_00559c84 == 0 && PressKey(VK_F8)) ApplyAndStart();
     if (DAT_00559c84 == 0 && PressKey(VK_F9)) {
         g_StartPending = false;
@@ -246,6 +271,14 @@ void UpdateInput()
     if (g_StartPending && GetTickCount() - g_StartRequestedAt >= 350) {
         g_StartPending = false;
         HelperProtocol::Start();
+    }
+
+
+    // Every edit is saved to the server automatically.  The short debounce
+    // avoids the Helper command rate limit when a player clicks rapidly.
+    if (g_SettingsDirty && !g_StartPending &&
+        GetTickCount() - g_SettingsChangedAt >= 350) {
+        if (HelperProtocol::SendConfiguration(g_Settings)) g_SettingsDirty = false;
     }
 
     if (!g_Open) return;
@@ -263,14 +296,11 @@ void UpdateInput()
     ToggleLootFlag(10, HelperProtocol::LootExcellent);
     ChangeValue(11, g_Settings.lootRange, 1, 5, 1);
 
-    const int buttonsY = kY + 42 + 12 * kRowHeight + 5;
-    if (Clicked(kX + 8, buttonsY, 56, 20)) {
-        HelperProtocol::SendConfiguration(g_Settings);
-        ConsumeClick();
-    } else if (Clicked(kX + 71, buttonsY, 56, 20)) {
+    const int buttonsY = kY + 42 + 12 * kRowHeight + 4;
+    if (Clicked(kX + 7, buttonsY, 82, 18)) {
         ApplyAndStart();
         ConsumeClick();
-    } else if (Clicked(kX + 134, buttonsY, 56, 20)) {
+    } else if (Clicked(kX + 95, buttonsY, 82, 18)) {
         g_StartPending = false;
         HelperProtocol::Stop();
         ConsumeClick();
@@ -311,11 +341,10 @@ void Render()
     DrawToggleRow(10, "Loot Excellent", (g_Settings.lootFlags & HelperProtocol::LootExcellent) != 0);
     DrawValueRow(11, "Loot Range", g_Settings.lootRange);
 
-    const int buttonsY = kY + 42 + 12 * kRowHeight + 5;
-    DrawButton(kX + 8, buttonsY, 56, "APPLY");
-    DrawButton(kX + 71, buttonsY, 56, "START", status.active);
-    DrawButton(kX + 134, buttonsY, 56, "STOP");
-    DrawTextLine(kX + 8, buttonsY + 26, kWidth - 16, "F8 Start  |  F9 Stop", 1);
+    const int buttonsY = kY + 42 + 12 * kRowHeight + 4;
+    DrawButton(kX + 7, buttonsY, 82, "START", status.active);
+    DrawButton(kX + 95, buttonsY, 82, "STOP");
+    DrawTextLine(kX + 7, buttonsY + 23, kWidth - 14, "F8 Start  |  F9 Stop", 1);
 
     m_dwTextColor = oldText;
     m_dwBackColor = oldBack;
