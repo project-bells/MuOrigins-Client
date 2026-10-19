@@ -20,6 +20,16 @@ enum LootFlags : std::uint8_t {
     LootExcellent = 0x04,
 };
 
+enum Result : std::uint8_t {
+    ResultOk = 0,
+    ResultBadVersion = 1,
+    ResultBadSettings = 2,
+    ResultRateLimited = 3,
+    ResultNotReady = 4,
+    ResultNotSupported = 5,
+    ResultSkillNotLearned = 6,
+};
+
 #pragma pack(push, 1)
 struct Settings {
     std::uint8_t version = kVersion;

@@ -12,6 +12,42 @@ extern "C" void DbgLogPublic(const char* msg);
 
 CWindow gWindow;
 
+namespace {
+
+void StartWindowManager()
+{
+    // F12 is owned by one small companion process so it can hide/restore all
+    // four clients even while every game window is hidden. Only the first
+    // client starts it; later clients are discovered by its timer.
+    HANDLE existing = OpenMutexA(SYNCHRONIZE, FALSE,
+                                 "Local\\MuOriginsWindowManager.Singleton");
+    if (existing) {
+        CloseHandle(existing);
+        return;
+    }
+
+    char executable[MAX_PATH] = {};
+    if (!GetModuleFileNameA(nullptr, executable, MAX_PATH)) return;
+    char* slash = strrchr(executable, '\\');
+    if (!slash) return;
+    strcpy_s(slash + 1, MAX_PATH - static_cast<size_t>(slash + 1 - executable),
+             "MUWindowManager.exe");
+    if (GetFileAttributesA(executable) == INVALID_FILE_ATTRIBUTES) return;
+
+    STARTUPINFOA startup = {};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process = {};
+    char commandLine[MAX_PATH + 3] = {};
+    sprintf_s(commandLine, "\"%s\"", executable);
+    if (CreateProcessA(executable, commandLine, nullptr, nullptr, FALSE, 0,
+                       nullptr, nullptr, &startup, &process)) {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+    }
+}
+
+} // namespace
+
 // DESVIACION DLL: CWindow::ChangeWindowText, sin resets hasta integrar su HUD.
 void CWindow::UpdateTitle()
 {
@@ -210,6 +246,7 @@ bool CWindow::Create(HINSTANCE hInst, WNDPROC wndProc)
                                      GetSystemMetrics(SM_CYSMICON),
                                      LR_DEFAULTCOLOR);
     if (hSmall) SendMessageA(m_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
+    StartWindowManager();
     return true;
 }
 
