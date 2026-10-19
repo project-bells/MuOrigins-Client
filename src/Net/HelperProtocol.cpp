@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Net/HelperProtocol.h"
 #include "Net/Network.h"
+#include "Combat/Skills.h"
 
 namespace HelperProtocol {
 namespace {
@@ -12,6 +13,7 @@ enum SubCode : std::uint8_t {
     StatusMessage = 0x03,
     OfflineCommand = 0x04,
     SyncCommand = 0x05,
+    CastMessage = 0x06,
 };
 
 #pragma pack(push, 1)
@@ -43,11 +45,22 @@ struct StatusPacket {
     std::uint16_t targetIndex;
     Settings settings;
 };
+
+struct CastPacket {
+    std::uint8_t type;
+    std::uint8_t size;
+    std::uint8_t head;
+    std::uint8_t subCode;
+    std::uint8_t version;
+    std::uint8_t skill;
+    std::uint8_t target[2];
+};
 #pragma pack(pop)
 
 static_assert(sizeof(ConfigPacket) == 14, "Helper config wire layout");
 static_assert(sizeof(CommandPacket) == 5, "Helper command wire layout");
 static_assert(sizeof(StatusPacket) == 20, "Helper status wire layout");
+static_assert(sizeof(CastPacket) == 8, "Helper cast wire layout");
 
 Status g_Status;
 
@@ -96,7 +109,15 @@ void RequestOfflineHunting() { SendCommand(OfflineCommand); }
 
 void Receive(const std::uint8_t* packet, int size, std::uint8_t header, std::uint8_t subCode)
 {
-    if (packet == nullptr || header != 0xC1 || subCode != StatusMessage || size != sizeof(StatusPacket)) return;
+    if (packet == nullptr || header != 0xC1) return;
+    if (subCode == CastMessage && size == sizeof(CastPacket)) {
+        const CastPacket* message = reinterpret_cast<const CastPacket*>(packet);
+        if (message->version == kVersion)
+            Combat_PlayHelperCast(message->skill,
+                (std::uint16_t)((message->target[0] << 8) | message->target[1]));
+        return;
+    }
+    if (subCode != StatusMessage || size != sizeof(StatusPacket)) return;
     const StatusPacket* message = reinterpret_cast<const StatusPacket*>(packet);
     if (message->version != kVersion || message->settings.version != kVersion) return;
     g_Status.received = true;

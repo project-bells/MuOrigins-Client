@@ -596,6 +596,19 @@ void __cdecl Player_ProcessInput(void)
     // incluso cuando los gates de abajo saldrían temprano (p.ej. durante un cooldown).
     HUD_HotkeyTick();
     HelperWindow::UpdateInput();
+
+    // Poll F12 through the same input path as the working Helper hotkeys.
+    // GetAsyncKeyState/PressKey remains available while the game is minimized,
+    // allowing the same key to restore it without a companion application.
+    if (PressKey(VK_F12)) {
+        HWND window = gWindow.GetHwnd();
+        if (IsIconic(window)) {
+            ShowWindow(window, SW_RESTORE);
+            SetForegroundWindow(window);
+        } else {
+            ShowWindow(window, SW_MINIMIZE);
+        }
+    }
     // Poblar el flag MouseOnWindow (per IDA) ANTES de la lógica de GroundClick,
     // así clickear adentro de un panel no hace caminar al jugador.
     MouseOnWindow_Update();

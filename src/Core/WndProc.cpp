@@ -67,7 +67,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_DESTROY:
-        UnregisterHotKey(hWnd, 0x4D55);
         gPing.Reset();
         gFrameLimiter.Shutdown();
         // IDA WndProc (0x4149D0) case WM_DESTROY: marca el cierre, corta la
@@ -81,18 +80,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             Sound_ReleaseBuffer(buffer);
         OpenGL_Release();
         PostQuitMessage(0);
-        break;
-
-    case WM_HOTKEY:
-        if (wParam == 0x4D55) {
-            if (IsIconic(hWnd)) {
-                ShowWindow(hWnd, SW_RESTORE);
-                SetForegroundWindow(hWnd);
-            } else {
-                ShowWindow(hWnd, SW_MINIMIZE);
-            }
-            return 0;
-        }
         break;
 
     case WM_CLOSE:

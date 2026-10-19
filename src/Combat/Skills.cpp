@@ -118,6 +118,30 @@ extern BYTE* g_CharData;     // DAT_07cf1ffc
 #define ENTITY(idx)  ((BYTE*)DAT_07abf5d0 + (idx) * 0x394)
 #define STRIDE       0x394
 
+void Combat_PlayHelperCast(BYTE skill, WORD targetKey)
+{
+    BYTE* hero = (BYTE*)DAT_07abf5d8;
+    if (!hero) return;
+    const int targetIndex = Entity_FindById(targetKey & 0x7FFF);
+    if (targetIndex < 0 || targetIndex >= 400) return;
+    BYTE* target = ENTITY(targetIndex);
+
+    // Reproduce the local part of a real right-click cast without generating
+    // OS mouse input or a second damage request to the server.
+    hero[770] = skill;
+    *(short*)(hero + 0x310) = (short)targetIndex;
+    if (target[352] != 0) {
+        *(float*)(hero + 36) = CreateAngle(*(float*)(hero + 16), *(float*)(hero + 20),
+                                           *(float*)(target + 16), *(float*)(target + 20));
+    }
+    if (*(WORD*)(hero + 2) == 390)
+        SetPlayerMagic((int)(intptr_t)hero);
+    else
+        SetPlayerAttack((int)(intptr_t)hero, 0, 0, 0);
+    *(DWORD*)(hero + 264) = 0;
+    hero[0x2F5] = 1;
+}
+
 // ============================================================
 // PacketHandler_0x19  @ 0x0042bca0
 // Server → Client: skill/magic effect
